@@ -30,7 +30,7 @@ const verifyJWT = (req, res, next) => {
 // photo-awesome
 // zaVPqYskgkDLiZet
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri =
   "mongodb+srv://photo-awesome:zaVPqYskgkDLiZet@cluster0.kuomool.mongodb.net/?retryWrites=true&w=majority";
 
@@ -70,6 +70,20 @@ async function run() {
       const result = await classesCollection.insertOne(classes);
       res.send(result);
     });
+
+    // update classes api approve
+    app.patch('/classes/:id',verifyJWT,async(req,res)=>{
+        const id=req.params.id;
+        const filter={_id:new ObjectId(id)};
+        // const updateData=req.body;
+        const updateDoc={
+            $set:{
+                status:updateData.status
+            }
+        };
+        const result=await classesCollection.updateOne(filter,updateDoc);
+        res.send(result)
+    })
 
     // users get api
     app.get("/users", verifyJWT, async (req, res) => {
