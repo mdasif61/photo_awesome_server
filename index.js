@@ -64,6 +64,13 @@ async function run() {
       res.send(result);
     });
 
+    // approved classes api
+    app.get('/approved',async(req,res)=>{
+      const query={status:'Approved'};
+      const result=await classesCollection.find(query).toArray();
+      res.send(result)
+    })
+
     // classes post api
     app.post("/classes", verifyJWT, async (req, res) => {
       const classes = req.body;
@@ -72,13 +79,12 @@ async function run() {
     });
 
     // update classes api approve
-    app.patch('/classes/:id',verifyJWT,async(req,res)=>{
+    app.patch('/classes/:id',async(req,res)=>{
         const id=req.params.id;
         const filter={_id:new ObjectId(id)};
-        // const updateData=req.body;
         const updateDoc={
             $set:{
-                status:updateData.status
+                status:'Approved'
             }
         };
         const result=await classesCollection.updateOne(filter,updateDoc);
