@@ -12,6 +12,21 @@ app.get('/', (req, res) => {
     res.send('Photo Awesome is Running')
 })
 
+const verifyJWT=(req,res,next)=>{
+    const authorization=req.headers.authorization;
+    if(!authorization){
+        return res.status(401).send({error:true, message:'unauthorized'})
+    }
+    const token = authorization.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN, (err,decoded)=>{
+        if(err){
+            return res.status(401).send({error:true, message:'unauthorized'})
+        }
+        req.decoded=decoded;
+        next()
+    })
+}
+
 // photo-awesome
 // zaVPqYskgkDLiZet
 
@@ -32,10 +47,36 @@ async function run() {
 
         await client.connect();
 
+        const usersCollection=client.db('photo_awesome').collection('users')
         const classesCollection=client.db('photo_awesome').collection('classes')
+
+
+        app.post('/jwt',(req,res)=>{
+            const loggedUser=req.body;
+            const token=jwt.sign(loggedUser, process.env.ACCESS_TOKEN, {expiresIn:'1h'});
+            res.send({token})
+        })
 
         app.get('/classes',async(req,res)=>{
             const result=await classesCollection.find().toArray();
+            res.send(result)
+        })
+
+        // users get api
+        app.get('/users',async(req,res)=>{
+            const result=await usersCollection.find().toArray()
+            res.send(result)
+        })
+
+        // users post api
+        app.post('/users',async(req,res)=>{
+            const newUser=req.body;
+            const query={email:newUser.email}
+            const existUser=await usersCollection.findOne(query);
+            if(existUser){
+                return res.send({message:'user already added'})
+            }
+            const result=await usersCollection.insertOne(newUser);
             res.send(result)
         })
 
