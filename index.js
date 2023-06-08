@@ -86,6 +86,15 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/myClass',verifyJWT,verifyInstructor,async(req,res)=>{
+      let query={};
+      if(req.query?.email){
+        query={email:req.query.email}
+      }
+      const result=await classesCollection.find(query).toArray();
+      res.send(result)
+    })
+
     // approved classes api
     app.get('/approved', async (req, res) => {
       const query = { status: 'Approved' };
