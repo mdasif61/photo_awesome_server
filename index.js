@@ -214,7 +214,7 @@ async function run() {
     app.post("/selectedClass", verifyJWT, async (req, res) => {
       const selectClass = req.body;
 
-      const query = { selectId: selectClass.selectId };
+      const query = { selectId: selectClass.selectId, email:selectClass.email};
       const existingClass = await selectedCollection.findOne(query);
       if (existingClass) {
         return res.send({ message: "Already select this class" });
@@ -223,6 +223,21 @@ async function run() {
       const result = await selectedCollection.insertOne(selectClass);
       res.send(result);
     });
+
+    // student select class get api
+    app.get('/selectGet',verifyJWT,async(req,res)=>{
+      const query={email:req.query?.email};
+      const result=await selectedCollection.find(query).toArray();
+      res.send(result)
+    })
+
+    // select classes delete api
+    app.delete('/selectDelete/:id',verifyJWT,async(req,res)=>{
+      const id=req.params.id;
+      const query={_id:new ObjectId(id)};
+      const result=await selectedCollection.deleteOne(query);
+      res.send(result)
+    })
 
     await client.db("admin").command({ ping: 1 });
     console.log(
