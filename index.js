@@ -79,12 +79,25 @@ async function run() {
     });
 
     // update classes api approve
-    app.patch('/classes/:id',async(req,res)=>{
+    app.patch('/approved/:id',async(req,res)=>{
         const id=req.params.id;
         const filter={_id:new ObjectId(id)};
         const updateDoc={
             $set:{
                 status:'Approved'
+            }
+        };
+        const result=await classesCollection.updateOne(filter,updateDoc);
+        res.send(result)
+    })
+    
+    // update classes api denied
+    app.patch('/denied/:id',async(req,res)=>{
+        const id=req.params.id;
+        const filter={_id:new ObjectId(id)};
+        const updateDoc={
+            $set:{
+                status:'Denied'
             }
         };
         const result=await classesCollection.updateOne(filter,updateDoc);
