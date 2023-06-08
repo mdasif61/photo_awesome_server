@@ -58,6 +58,28 @@ async function run() {
       res.send({ token });
     });
 
+    // middlewere api start
+    const verifyAdmin=async(req,res,next)=>{
+      const email=req.decoded.email;
+      const query={email:email};
+      const user=await usersCollection.findOne(query);
+      if(user.status !=='Admin'){
+        return res.status(403).send({error:true, message:'forbidden access'})
+      }
+      next()
+    }
+
+    const verifyInstructor=async(req,res,next)=>{
+      const email=req.decoded.email;
+      const query={email:email};
+      const user=await usersCollection.findOne(query);
+      if(user.status !=='Instructor'){
+        return res.status(403).send({error:true, message:'forbidden access'})
+      }
+      next()
+    }
+    // middlewere api end
+
     // classes get api
     app.get("/classes", async (req, res) => {
       const result = await classesCollection.find().toArray();
@@ -105,7 +127,7 @@ async function run() {
     })
 
     // users get api
-    app.get("/users", verifyJWT, async (req, res) => {
+    app.get("/users", verifyJWT,verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -121,6 +143,44 @@ async function run() {
       const result = await usersCollection.insertOne(newUser);
       res.send(result);
     });
+
+    // make admin api
+    app.patch('/makeAdmin/:id',async(req,res)=>{
+      const id=req.params.id;
+      const filter={_id:new ObjectId(id)};
+      const updateDoc={
+        $set:{
+          status:'Admin'
+        }
+      }
+      const result=await usersCollection.updateOne(filter,updateDoc)
+      res.send(result)
+    })
+
+    // make instructor api
+    app.patch('/makeInstructor/:id',async(req,res)=>{
+      const id=req.params.id;
+      const filter={_id:new ObjectId(id)};
+      const updateDoc={
+        $set:{
+          status:'Instructor'
+        }
+      }
+      const result=await usersCollection.updateOne(filter,updateDoc);
+      res.send(result)
+    })
+
+    // get admin api
+    app.get('/admin/:email',verifyJWT,async(req,res)=>{
+      const email=req.params.email;
+      if(req.decoded?.email!==email){
+        res.send({admin:false})
+      }
+      const query={email:email};
+      const user=await usersCollection.findOne(query);
+      const result={admin:user?.status==='Admin'};
+      res.send(result)
+    })
 
     await client.db("admin").command({ ping: 1 });
     console.log(
