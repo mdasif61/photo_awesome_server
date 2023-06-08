@@ -203,6 +203,12 @@ async function run() {
       res.send(result)
     })
 
+    // student select class post api
+    app.post('/selectedClass',verifyJWT,async(req,res)=>{
+      const selectClass=req.body;
+      console.log(selectClass)
+    })
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
