@@ -49,6 +49,9 @@ async function run() {
 
     const usersCollection = client.db("photo_awesome").collection("users");
     const classesCollection = client.db("photo_awesome").collection("classes");
+    const selectedCollection = client
+      .db("photo_awesome")
+      .collection("selected");
 
     app.post("/jwt", (req, res) => {
       const loggedUser = req.body;
@@ -63,21 +66,25 @@ async function run() {
       const email = req.decoded.email;
       const query = { email: email };
       const user = await usersCollection.findOne(query);
-      if (user?.status !== 'Admin') {
-        return res.status(403).send({ error: true, message: 'forbidden access' })
+      if (user?.status !== "Admin") {
+        return res
+          .status(403)
+          .send({ error: true, message: "forbidden access" });
       }
-      next()
-    }
+      next();
+    };
 
     const verifyInstructor = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email: email };
       const user = await usersCollection.findOne(query);
-      if (user.status !== 'Instructor') {
-        return res.status(403).send({ error: true, message: 'forbidden access' })
+      if (user.status !== "Instructor") {
+        return res
+          .status(403)
+          .send({ error: true, message: "forbidden access" });
       }
-      next()
-    }
+      next();
+    };
     // middlewere api end
 
     // classes get api
@@ -86,21 +93,21 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/myClass',verifyJWT,verifyInstructor,async(req,res)=>{
-      let query={};
-      if(req.query?.email){
-        query={email:req.query.email}
+    app.get("/myClass", verifyJWT, verifyInstructor, async (req, res) => {
+      let query = {};
+      if (req.query?.email) {
+        query = { email: req.query.email };
       }
-      const result=await classesCollection.find(query).toArray();
-      res.send(result)
-    })
+      const result = await classesCollection.find(query).toArray();
+      res.send(result);
+    });
 
     // approved classes api
-    app.get('/approved', async (req, res) => {
-      const query = { status: 'Approved' };
+    app.get("/approved", async (req, res) => {
+      const query = { status: "Approved" };
       const result = await classesCollection.find(query).toArray();
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     // classes post api
     app.post("/classes", verifyJWT, async (req, res) => {
@@ -110,30 +117,30 @@ async function run() {
     });
 
     // update classes api approve
-    app.patch('/approved/:id', async (req, res) => {
+    app.patch("/approved/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          status: 'Approved'
-        }
+          status: "Approved",
+        },
       };
       const result = await classesCollection.updateOne(filter, updateDoc);
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     // update classes api denied
-    app.patch('/denied/:id', async (req, res) => {
+    app.patch("/denied/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          status: 'Denied'
-        }
+          status: "Denied",
+        },
       };
       const result = await classesCollection.updateOne(filter, updateDoc);
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     // users get api
     app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
@@ -154,60 +161,68 @@ async function run() {
     });
 
     // make admin api
-    app.patch('/makeAdmin/:id', async (req, res) => {
+    app.patch("/makeAdmin/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          status: 'Admin'
-        }
-      }
-      const result = await usersCollection.updateOne(filter, updateDoc)
-      res.send(result)
-    })
+          status: "Admin",
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
     // make instructor api
-    app.patch('/makeInstructor/:id', async (req, res) => {
+    app.patch("/makeInstructor/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          status: 'Instructor'
-        }
-      }
+          status: "Instructor",
+        },
+      };
       const result = await usersCollection.updateOne(filter, updateDoc);
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     // get admin api
-    app.get('/admin/:email', verifyJWT, async (req, res) => {
+    app.get("/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       if (req.decoded?.email !== email) {
-        res.send({ admin: false })
+        res.send({ admin: false });
       }
       const query = { email: email };
       const user = await usersCollection.findOne(query);
-      const result = { admin: user?.status === 'Admin' };
-      res.send(result)
-    })
+      const result = { admin: user?.status === "Admin" };
+      res.send(result);
+    });
 
     // get instructor api
-    app.get('/instructor/:email',verifyJWT,async(req,res)=>{
-      const email=req.params.email;
-      if(email !==req.decoded?.email){
-        res.send({instructor:false})
+    app.get("/instructor/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.decoded?.email) {
+        res.send({ instructor: false });
       }
-      const query={email:email};
-      const user=await usersCollection.findOne(query);
-      const result={instructor:user?.status==='Instructor'};
-      res.send(result)
-    })
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { instructor: user?.status === "Instructor" };
+      res.send(result);
+    });
 
     // student select class post api
-    app.post('/selectedClass',verifyJWT,async(req,res)=>{
-      const selectClass=req.body;
-      console.log(selectClass)
-    })
+    app.post("/selectedClass", verifyJWT, async (req, res) => {
+      const selectClass = req.body;
+
+      const query = { selectId: selectClass.selectId };
+      const existingClass = await selectedCollection.findOne(query);
+      if (existingClass) {
+        return res.send({ message: "Already select this class" });
+      }
+
+      const result = await selectedCollection.insertOne(selectClass);
+      res.send(result);
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
