@@ -59,22 +59,22 @@ async function run() {
     });
 
     // middlewere api start
-    const verifyAdmin=async(req,res,next)=>{
-      const email=req.decoded.email;
-      const query={email:email};
-      const user=await usersCollection.findOne(query);
-      if(user.status !=='Admin'){
-        return res.status(403).send({error:true, message:'forbidden access'})
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user?.status !== 'Admin') {
+        return res.status(403).send({ error: true, message: 'forbidden access' })
       }
       next()
     }
 
-    const verifyInstructor=async(req,res,next)=>{
-      const email=req.decoded.email;
-      const query={email:email};
-      const user=await usersCollection.findOne(query);
-      if(user.status !=='Instructor'){
-        return res.status(403).send({error:true, message:'forbidden access'})
+    const verifyInstructor = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user.status !== 'Instructor') {
+        return res.status(403).send({ error: true, message: 'forbidden access' })
       }
       next()
     }
@@ -87,9 +87,9 @@ async function run() {
     });
 
     // approved classes api
-    app.get('/approved',async(req,res)=>{
-      const query={status:'Approved'};
-      const result=await classesCollection.find(query).toArray();
+    app.get('/approved', async (req, res) => {
+      const query = { status: 'Approved' };
+      const result = await classesCollection.find(query).toArray();
       res.send(result)
     })
 
@@ -101,33 +101,33 @@ async function run() {
     });
 
     // update classes api approve
-    app.patch('/approved/:id',async(req,res)=>{
-        const id=req.params.id;
-        const filter={_id:new ObjectId(id)};
-        const updateDoc={
-            $set:{
-                status:'Approved'
-            }
-        };
-        const result=await classesCollection.updateOne(filter,updateDoc);
-        res.send(result)
+    app.patch('/approved/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: 'Approved'
+        }
+      };
+      const result = await classesCollection.updateOne(filter, updateDoc);
+      res.send(result)
     })
-    
+
     // update classes api denied
-    app.patch('/denied/:id',async(req,res)=>{
-        const id=req.params.id;
-        const filter={_id:new ObjectId(id)};
-        const updateDoc={
-            $set:{
-                status:'Denied'
-            }
-        };
-        const result=await classesCollection.updateOne(filter,updateDoc);
-        res.send(result)
+    app.patch('/denied/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: 'Denied'
+        }
+      };
+      const result = await classesCollection.updateOne(filter, updateDoc);
+      res.send(result)
     })
 
     // users get api
-    app.get("/users", verifyJWT,verifyAdmin, async (req, res) => {
+    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -145,40 +145,52 @@ async function run() {
     });
 
     // make admin api
-    app.patch('/makeAdmin/:id',async(req,res)=>{
-      const id=req.params.id;
-      const filter={_id:new ObjectId(id)};
-      const updateDoc={
-        $set:{
-          status:'Admin'
+    app.patch('/makeAdmin/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: 'Admin'
         }
       }
-      const result=await usersCollection.updateOne(filter,updateDoc)
+      const result = await usersCollection.updateOne(filter, updateDoc)
       res.send(result)
     })
 
     // make instructor api
-    app.patch('/makeInstructor/:id',async(req,res)=>{
-      const id=req.params.id;
-      const filter={_id:new ObjectId(id)};
-      const updateDoc={
-        $set:{
-          status:'Instructor'
+    app.patch('/makeInstructor/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: 'Instructor'
         }
       }
-      const result=await usersCollection.updateOne(filter,updateDoc);
+      const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result)
     })
 
     // get admin api
-    app.get('/admin/:email',verifyJWT,async(req,res)=>{
+    app.get('/admin/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (req.decoded?.email !== email) {
+        res.send({ admin: false })
+      }
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { admin: user?.status === 'Admin' };
+      res.send(result)
+    })
+
+    // get instructor api
+    app.get('/instructor/:email',verifyJWT,async(req,res)=>{
       const email=req.params.email;
-      if(req.decoded?.email!==email){
-        res.send({admin:false})
+      if(email !==req.decoded?.email){
+        res.send({instructor:false})
       }
       const query={email:email};
       const user=await usersCollection.findOne(query);
-      const result={admin:user?.status==='Admin'};
+      const result={instructor:user?.status==='Instructor'};
       res.send(result)
     })
 
