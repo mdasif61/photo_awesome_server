@@ -3,7 +3,7 @@ const app = express();
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-const stripe=require('stripe')(process.env.PAYMENT_SECRET)
+const stripe = require("stripe")(process.env.PAYMENT_SECRET);
 const port = process.env.PORT || 5000;
 
 app.use(cors());
@@ -50,6 +50,7 @@ async function run() {
 
     const usersCollection = client.db("photo_awesome").collection("users");
     const classesCollection = client.db("photo_awesome").collection("classes");
+    const paymentCollection = client.db("photo_awesome").collection("payments");
     const selectedCollection = client
       .db("photo_awesome")
       .collection("selected");
@@ -215,7 +216,10 @@ async function run() {
     app.post("/selectedClass", verifyJWT, async (req, res) => {
       const selectClass = req.body;
 
-      const query = { selectId: selectClass.selectId, email:selectClass.email};
+      const query = {
+        selectId: selectClass.selectId,
+        email: selectClass.email,
+      };
       const existingClass = await selectedCollection.findOne(query);
       if (existingClass) {
         return res.send({ message: "Already select this class" });
@@ -226,47 +230,60 @@ async function run() {
     });
 
     // student select class get api
-    app.get('/selectGet',verifyJWT,async(req,res)=>{
-      const query={email:req.query?.email};
-      const result=await selectedCollection.find(query).toArray();
-      res.send(result)
-    })
+    app.get("/selectGet", verifyJWT, async (req, res) => {
+      const query = { email: req.query?.email };
+      const result = await selectedCollection.find(query).toArray();
+      res.send(result);
+    });
 
     // select classes delete api
-    app.delete('/selectDelete/:id',verifyJWT,async(req,res)=>{
-      const id=req.params.id;
-      const query={_id:new ObjectId(id)};
-      const result=await selectedCollection.deleteOne(query);
-      res.send(result)
-    })
+    app.delete("/selectDelete/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await selectedCollection.deleteOne(query);
+      res.send(result);
+    });
 
     // available seats update api
-    app.patch('/seats/:id',verifyJWT,async(req,res)=>{
-      const id=req.params.id;
-      const filter={_id:new ObjectId(id)};
-      const updateData=req.body;
-      const updateDoc={
-        $set:{
-          seats:updateData.seats-1
-        }
-      }
-      const result=await classesCollection.updateOne(filter,updateDoc)
-      res.send(result)
-    })
+    app.patch("/seats/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateData = req.body;
+      const updateDoc = {
+        $set: {
+          seats: updateData.seats - 1,
+        },
+      };
+      const result = await classesCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
     // payment api
-    app.post("/create-payment-intent",verifyJWT, async (req, res) => {
-      const {price}=req.body;
-      const amount=parseFloat(price*100)
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      const amount = parseFloat(price * 100);
+      console.log(amount);
       const paymentIntent = await stripe.paymentIntents.create({
-        amount:amount,
-        currency:'usd',
-        payment_method_types:['card']
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
       });
-    
+
       res.send({
         clientSecret: paymentIntent.client_secret,
       });
+    });
+
+    // payment Classes api
+    app.post("/payments", verifyJWT, async (req, res) => {
+      const paymentInfo = req.body;
+      const paymentSave=await paymentCollection.insertOne(paymentInfo);
+      const query={_id:new ObjectId(paymentInfo.selectItems)}
+      const deleteClass=await selectedCollection.deleteOne(query);
+      res.send({
+        paymentSave,
+        deleteClass
+      })
     });
 
     await client.db("admin").command({ ping: 1 });
