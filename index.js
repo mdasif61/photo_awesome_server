@@ -212,6 +212,12 @@ async function run() {
       res.send(result);
     });
 
+    // get all instructor api
+    app.get('/allInstructor',async(req,res)=>{
+      const result=await usersCollection.find({status:'Instructor'}).toArray();
+      res.send(result)
+    })
+
     // student select class post api
     app.post("/selectedClass", verifyJWT, async (req, res) => {
       const selectClass = req.body;
@@ -292,6 +298,25 @@ async function run() {
       const query={email:email};
       const result=await paymentCollection.find(query).sort({date:-1}).toArray()
       res.send(result)
+    })
+
+    // popular classes api
+    app.get('/popularClass',async(req,res)=>{
+      const pipeline=([
+        {
+          $group:{
+            _id:'$selectItems',
+            count:{$sum:1}
+          }
+        },
+        {
+          $sort:{count:-1}
+        }
+      ])
+      const result=await paymentCollection.aggregate(pipeline).toArray();
+      const query={selectItems:{$in:result.map(item=>item._id)}};
+      const popular=await paymentCollection.find(query).toArray()
+      res.send(popular)
     })
 
     await client.db("admin").command({ ping: 1 });
