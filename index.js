@@ -239,6 +239,20 @@ async function run() {
       res.send(result)
     })
 
+    // available seats update api
+    app.patch('/seats/:id',verifyJWT,async(req,res)=>{
+      const id=req.params.id;
+      const filter={_id:new ObjectId(id)};
+      const updateData=req.body;
+      const updateDoc={
+        $set:{
+          seats:updateData.seats-1
+        }
+      }
+      const result=await classesCollection.updateOne(filter,updateDoc)
+      res.send(result)
+    })
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
