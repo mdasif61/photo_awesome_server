@@ -1,10 +1,10 @@
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 5000;
 const cors = require("cors");
-const stripe=require('stripe')(process.env.PAYMENT_SECRET)
-require("dotenv").config();
 const jwt = require("jsonwebtoken");
+require("dotenv").config();
+const stripe=require('stripe')(process.env.PAYMENT_SECRET)
+const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
@@ -261,7 +261,7 @@ async function run() {
       const paymentIntent = await stripe.paymentIntents.create({
         amount:amount,
         currency:'usd',
-        payment_method_key:['card']
+        payment_method_types:['card']
       });
     
       res.send({
