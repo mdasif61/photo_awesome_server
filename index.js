@@ -286,6 +286,14 @@ async function run() {
       })
     });
 
+    // payment history get
+    app.get('/history',verifyJWT,async(req,res)=>{
+      const email=req.query.email;
+      const query={email:email};
+      const result=await paymentCollection.find(query).sort({date:-1}).toArray()
+      res.send(result)
+    })
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
