@@ -236,6 +236,12 @@ async function run() {
       res.send(result);
     });
 
+    // six instructor show in home page api
+    app.get('/instructor',async(req,res)=>{
+        const result=await usersCollection.find({status:'Instructor'}).toArray();
+        res.send(result)
+    })
+
     // get all instructor api
     app.get("/allInstructor", async (req, res) => {
       const result = await usersCollection
