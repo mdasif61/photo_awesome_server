@@ -95,6 +95,21 @@ async function run() {
       res.send(result);
     });
 
+    // popular classes api
+    app.patch('/classes/:id',async(req,res)=>{
+      const id=req.params.id;
+      const query={_id:new ObjectId(id)};
+      const classes=await classesCollection.findOne(query);
+
+      const updateDoc={
+        $set:{
+          total_enroll :classes.total_enroll+1
+        }
+      }
+      const result=await classesCollection.updateOne(query,updateDoc);
+      res.send(result)
+    })
+
     app.get("/myClass", verifyJWT, verifyInstructor, async (req, res) => {
       let query = {};
       if (req.query?.email) {
@@ -301,23 +316,26 @@ async function run() {
     })
 
     // popular classes api
-    app.get('/popularClass',async(req,res)=>{
-      const pipeline=([
-        {
-          $group:{
-            _id:'$selectItems',
-            count:{$sum:1}
-          }
-        },
-        {
-          $sort:{count:-1}
-        }
-      ])
-      const result=await paymentCollection.aggregate(pipeline).toArray();
-      const query={selectItems:{$in:result.map(item=>item._id)}};
-      const popular=await paymentCollection.find(query).toArray()
-      res.send(popular)
-    })
+    // app.get('/popularClass',async(req,res)=>{
+    //   const pipeline=([
+    //     {
+    //       $group:{
+    //         _id:'$selectItems',
+    //         count:{$sum:1}
+    //       }
+    //     },
+    //     {
+    //       $sort:{count:-1}
+    //     },
+    //     {
+    //       $limit:1
+    //     }
+    //   ])
+    //   const result=await paymentCollection.aggregate(pipeline).toArray();
+    //   const query={selectItems:{$in:result.map(item=>item._id)}};
+    //   const popular=await paymentCollection.find(query).toArray()
+    //   res.send(popular)
+    // })
 
     await client.db("admin").command({ ping: 1 });
     console.log(
