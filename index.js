@@ -95,7 +95,7 @@ async function run() {
       res.send(result);
     });
 
-    // popular classes api
+    // enrolled classes api
     app.patch('/classes/:id',async(req,res)=>{
       const id=req.params.id;
       const query={_id:new ObjectId(id)};
@@ -107,6 +107,12 @@ async function run() {
         }
       }
       const result=await classesCollection.updateOne(query,updateDoc);
+      res.send(result)
+    })
+
+    // popular classes api
+    app.get('/popularClass', async(req,res)=>{
+      const result=await classesCollection.find().sort({total_enroll:-1}).toArray();
       res.send(result)
     })
 
@@ -257,6 +263,14 @@ async function run() {
       res.send(result);
     });
 
+    // select class single api
+    app.get('/unique/:id',verifyJWT,async(req,res)=>{
+      const id=req.params.id;
+      const query={_id:new ObjectId(id)};
+      const result=await selectedCollection.findOne(query);
+      res.send(result)
+    })
+
     // select classes delete api
     app.delete("/selectDelete/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
@@ -314,28 +328,6 @@ async function run() {
       const result=await paymentCollection.find(query).sort({date:-1}).toArray()
       res.send(result)
     })
-
-    // popular classes api
-    // app.get('/popularClass',async(req,res)=>{
-    //   const pipeline=([
-    //     {
-    //       $group:{
-    //         _id:'$selectItems',
-    //         count:{$sum:1}
-    //       }
-    //     },
-    //     {
-    //       $sort:{count:-1}
-    //     },
-    //     {
-    //       $limit:1
-    //     }
-    //   ])
-    //   const result=await paymentCollection.aggregate(pipeline).toArray();
-    //   const query={selectItems:{$in:result.map(item=>item._id)}};
-    //   const popular=await paymentCollection.find(query).toArray()
-    //   res.send(popular)
-    // })
 
     await client.db("admin").command({ ping: 1 });
     console.log(
