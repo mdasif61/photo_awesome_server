@@ -119,6 +119,7 @@ async function run() {
       res.send(result);
     });
 
+    // get my classes api
     app.get("/myClass", verifyJWT, verifyInstructor, async (req, res) => {
       let query = {};
       if (req.query?.email) {
@@ -127,6 +128,28 @@ async function run() {
       const result = await classesCollection.find(query).toArray();
       res.send(result);
     });
+
+    // get unique class for update
+    app.get('/updateClass/:id',verifyJWT,verifyInstructor,async(req,res)=>{
+      const id=req.params.id;
+      const query={_id:new ObjectId(id)};
+      const result=await classesCollection.findOne(query);
+      res.send(result)
+    })
+
+    // update class api
+    app.patch('/myclassUpdate/:id',verifyJWT,verifyInstructor,async(req,res)=>{
+      const id=req.params.id;
+      const updateData=req.body;
+      const filter={_id:new ObjectId(id)};
+      const updateDoc={
+        $set:{
+          ...updateData
+        }
+      };
+      const result=await classesCollection.updateOne(filter,updateDoc);
+      res.send(result)
+    })
 
     // approved classes api
     app.get("/approved", async (req, res) => {
