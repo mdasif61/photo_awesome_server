@@ -96,25 +96,28 @@ async function run() {
     });
 
     // enrolled classes api
-    app.patch('/classes/:id',async(req,res)=>{
-      const id=req.params.id;
-      const query={_id:new ObjectId(id)};
-      const classes=await classesCollection.findOne(query);
+    app.patch("/classes/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const classes = await classesCollection.findOne(query);
 
-      const updateDoc={
-        $set:{
-          total_enroll :classes.total_enroll+1
-        }
-      }
-      const result=await classesCollection.updateOne(query,updateDoc);
-      res.send(result)
-    })
+      const updateDoc = {
+        $set: {
+          total_enroll: classes.total_enroll + 1,
+        },
+      };
+      const result = await classesCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
 
     // popular classes api
-    app.get('/popularClass', async(req,res)=>{
-      const result=await classesCollection.find().sort({total_enroll:-1}).toArray();
-      res.send(result)
-    })
+    app.get("/popularClass", async (req, res) => {
+      const result = await classesCollection
+        .find()
+        .sort({ total_enroll: -1 })
+        .toArray();
+      res.send(result);
+    });
 
     app.get("/myClass", verifyJWT, verifyInstructor, async (req, res) => {
       let query = {};
@@ -234,10 +237,12 @@ async function run() {
     });
 
     // get all instructor api
-    app.get('/allInstructor',async(req,res)=>{
-      const result=await usersCollection.find({status:'Instructor'}).toArray();
-      res.send(result)
-    })
+    app.get("/allInstructor", async (req, res) => {
+      const result = await usersCollection
+        .find({ status: "Instructor" })
+        .toArray();
+      res.send(result);
+    });
 
     // student select class post api
     app.post("/selectedClass", verifyJWT, async (req, res) => {
@@ -264,12 +269,12 @@ async function run() {
     });
 
     // select class single api
-    app.get('/unique/:id',verifyJWT,async(req,res)=>{
-      const id=req.params.id;
-      const query={_id:new ObjectId(id)};
-      const result=await selectedCollection.findOne(query);
-      res.send(result)
-    })
+    app.get("/unique/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await selectedCollection.findOne(query);
+      res.send(result);
+    });
 
     // select classes delete api
     app.delete("/selectDelete/:id", verifyJWT, async (req, res) => {
@@ -309,25 +314,36 @@ async function run() {
       });
     });
 
+    // payment classes get api
+    app.get("/payments", verifyJWT, async (req, res) => {
+      const email=req.query.email;
+      const query={email:email};
+      const result=await paymentCollection.find(query).toArray();
+      res.send(result)
+    });
+
     // payment Classes api
     app.post("/payments", verifyJWT, async (req, res) => {
       const paymentInfo = req.body;
-      const paymentSave=await paymentCollection.insertOne(paymentInfo);
-      const query={_id:new ObjectId(paymentInfo.selectItems)}
-      const deleteClass=await selectedCollection.deleteOne(query);
+      const paymentSave = await paymentCollection.insertOne(paymentInfo);
+      const query = { _id: new ObjectId(paymentInfo.selectItems) };
+      const deleteClass = await selectedCollection.deleteOne(query);
       res.send({
         paymentSave,
-        deleteClass
-      })
+        deleteClass,
+      });
     });
 
     // payment history get
-    app.get('/history',verifyJWT,async(req,res)=>{
-      const email=req.query.email;
-      const query={email:email};
-      const result=await paymentCollection.find(query).sort({date:-1}).toArray()
-      res.send(result)
-    })
+    app.get("/history", verifyJWT, async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await paymentCollection
+        .find(query)
+        .sort({ date: -1 })
+        .toArray();
+      res.send(result);
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
