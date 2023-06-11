@@ -7,7 +7,7 @@ const stripe = require("stripe")(process.env.PAYMENT_SECRET);
 const port = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json()); send
+app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("Photo Awesome is Running");
@@ -28,12 +28,9 @@ const verifyJWT = (req, res, next) => {
   });
 };
 
-// photo-awesome
-// zaVPqYskgkDLiZet
-
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri =
-  "mongodb+srv://photo-awesome:zaVPqYskgkDLiZet@cluster0.kuomool.mongodb.net/?retryWrites=true&w=majority";
+  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.kuomool.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -96,19 +93,18 @@ async function run() {
     });
 
     // single Classes get api for admin
-    app.patch('/classes/:id',verifyJWT,verifyAdmin,async(req,res)=>{
-      const id=req.params.id;
-      const feedback=req.body;
-      const filter={_id:new ObjectId(id)}
-      console.log(id, feedback.feedback)
-      const updateDoc={
-        $set:{
-          feedback:feedback.feedback
-        }
+    app.patch("/classes/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const feedback = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          feedback: feedback.feedback,
+        },
       };
-      const result=await classesCollection.updateOne(filter,updateDoc);
-      res.send(result)
-    })
+      const result = await classesCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
     // enrolled classes api
     app.patch("/classes/:id", async (req, res) => {
@@ -145,26 +141,36 @@ async function run() {
     });
 
     // get unique class for update
-    app.get('/updateClass/:id',verifyJWT,verifyInstructor,async(req,res)=>{
-      const id=req.params.id;
-      const query={_id:new ObjectId(id)};
-      const result=await classesCollection.findOne(query);
-      res.send(result)
-    })
+    app.get(
+      "/updateClass/:id",
+      verifyJWT,
+      verifyInstructor,
+      async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await classesCollection.findOne(query);
+        res.send(result);
+      }
+    );
 
     // update class api
-    app.patch('/myclassUpdate/:id',verifyJWT,verifyInstructor,async(req,res)=>{
-      const id=req.params.id;
-      const updateData=req.body;
-      const filter={_id:new ObjectId(id)};
-      const updateDoc={
-        $set:{
-          ...updateData
-        }
-      };
-      const result=await classesCollection.updateOne(filter,updateDoc);
-      res.send(result)
-    })
+    app.patch(
+      "/myclassUpdate/:id",
+      verifyJWT,
+      verifyInstructor,
+      async (req, res) => {
+        const id = req.params.id;
+        const updateData = req.body;
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            ...updateData,
+          },
+        };
+        const result = await classesCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      }
+    );
 
     // approved classes api
     app.get("/approved", async (req, res) => {
@@ -275,10 +281,12 @@ async function run() {
     });
 
     // six instructor show in home page api
-    app.get('/instructor',async(req,res)=>{
-        const result=await usersCollection.find({status:'Instructor'}).toArray();
-        res.send(result)
-    })
+    app.get("/instructor", async (req, res) => {
+      const result = await usersCollection
+        .find({ status: "Instructor" })
+        .toArray();
+      res.send(result);
+    });
 
     // get all instructor api
     app.get("/allInstructor", async (req, res) => {
@@ -346,7 +354,6 @@ async function run() {
     app.post("/create-payment-intent", verifyJWT, async (req, res) => {
       const { price } = req.body;
       const amount = parseFloat(price * 100);
-      console.log(amount);
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: "usd",
@@ -360,10 +367,10 @@ async function run() {
 
     // payment classes get api
     app.get("/payments", verifyJWT, async (req, res) => {
-      const email=req.query.email;
-      const query={email:email};
-      const result=await paymentCollection.find(query).toArray();
-      res.send(result)
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
     });
 
     // payment Classes api
