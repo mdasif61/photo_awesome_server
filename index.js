@@ -7,7 +7,7 @@ const stripe = require("stripe")(process.env.PAYMENT_SECRET);
 const port = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); send
 
 app.get("/", (req, res) => {
   res.send("Photo Awesome is Running");
