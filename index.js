@@ -95,6 +95,21 @@ async function run() {
       res.send(result);
     });
 
+    // single Classes get api for admin
+    app.patch('/classes/:id',verifyJWT,verifyAdmin,async(req,res)=>{
+      const id=req.params.id;
+      const feedback=req.body;
+      const filter={_id:new ObjectId(id)}
+      console.log(id, feedback.feedback)
+      const updateDoc={
+        $set:{
+          feedback:feedback.feedback
+        }
+      };
+      const result=await classesCollection.updateOne(filter,updateDoc);
+      res.send(result)
+    })
+
     // enrolled classes api
     app.patch("/classes/:id", async (req, res) => {
       const id = req.params.id;
