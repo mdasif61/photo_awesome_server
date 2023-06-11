@@ -43,7 +43,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    client.connect();
 
     const usersCollection = client.db("photo_awesome").collection("users");
     const classesCollection = client.db("photo_awesome").collection("classes");
@@ -84,7 +84,7 @@ async function run() {
       }
       next();
     };
-    // middlewere api end
+    // middlewere api endcd 
 
     // classes get api
     app.get("/classes", async (req, res) => {
